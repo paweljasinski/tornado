@@ -151,6 +151,8 @@ class BaseIOStream(object):
         """
         self._set_read_callback(callback)
         self._read_delimiter = delimiter
+        if isinstance(self._read_delimiter, bytes):
+            self._read_delimiter = str(self._read_delimiter)
         self._try_inline_read()
 
     def read_bytes(self, num_bytes, callback, streaming_callback=None):
@@ -201,7 +203,7 @@ class BaseIOStream(object):
         previously buffered write data and an old write callback, that
         callback is simply overwritten with this new callback.
         """
-        assert isinstance(data, bytes_type)
+        # assert isinstance(data, bytes_type)
         self._check_closed()
         # We use bool(_write_buffer) as a proxy for write_buffer_size>0,
         # so never put empty strings in the buffer.

@@ -699,8 +699,10 @@ class RequestHandler(object):
             if callback is not None:
                 callback()
             return
-
-        chunk = b"".join(self._write_buffer)
+        if sys.platform != 'cli':
+            chunk = b"".join(self._write_buffer)
+        else:
+            chunk = "".join(self._write_buffer)
         self._write_buffer = []
         if not self._headers_written:
             self._headers_written = True
@@ -1176,7 +1178,10 @@ class RequestHandler(object):
         if hasattr(self, "_new_cookie"):
             for cookie in self._new_cookie.values():
                 lines.append(utf8("Set-Cookie: " + cookie.OutputString(None)))
-        return b"\r\n".join(lines) + b"\r\n\r\n"
+        if sys.platform != 'cli':
+            return b"\r\n".join(lines) + b"\r\n\r\n"
+        else:
+            return "\r\n".join(lines) + "\r\n\r\n"
 
     def _log(self):
         """Logs the current request.

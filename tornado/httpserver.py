@@ -477,7 +477,7 @@ class HTTPRequest(object):
 
     def write(self, chunk, callback=None):
         """Writes the given chunk to the response stream."""
-        assert isinstance(chunk, bytes_type)
+        # assert isinstance(chunk, bytes_type)
         self.connection.write(chunk, callback=callback)
 
     def finish(self):
