@@ -449,7 +449,7 @@ class BaseIOStream(object):
             chunk = self.read_from_fd()
         except (socket.error, IOError, OSError) as e:
             # ssl.SSLError is a subclass of socket.error
-            if e.args[0] == errno.ECONNRESET:
+            if e.args[0] == errno.ECONNRESET or e.args[0] == errno.ECONNABORTED:
                 # Treat ECONNRESET as a connection close rather than
                 # an error to minimize log spam  (the exception will
                 # be available on self.error for apps that care).
