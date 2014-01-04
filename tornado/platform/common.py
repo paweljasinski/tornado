@@ -6,6 +6,7 @@ import socket
 import sys
 
 from tornado.platform import interface
+from tornado.util import bytes_type
 
 
 class Waker(interface.Waker):
@@ -72,12 +73,11 @@ class Waker(interface.Waker):
     def write_fileno(self):
         return self.writer.fileno()
 
+    _X = bytes_type("x")
+
     def wake(self):
         try:
-            if sys.platform != 'cli':
-                self.writer.send(b"x")
-            else:
-                self.writer.send("x")
+            self.writer.send(Waker._X)
         except (IOError, socket.error):
             pass
 

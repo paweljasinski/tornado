@@ -151,8 +151,6 @@ class BaseIOStream(object):
         """
         self._set_read_callback(callback)
         self._read_delimiter = delimiter
-        if isinstance(self._read_delimiter, bytes):
-            self._read_delimiter = str(self._read_delimiter)
         self._try_inline_read()
 
     def read_bytes(self, num_bytes, callback, streaming_callback=None):

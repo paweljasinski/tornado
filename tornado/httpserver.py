@@ -37,7 +37,8 @@ from tornado.log import gen_log
 from tornado import netutil
 from tornado.tcpserver import TCPServer
 from tornado import stack_context
-from tornado.util import bytes_type
+from tornado.util import bytes_type, EMPTY_STRING, SEPARATOR_CRLF, \
+        SEPARATOR_CRLFCRLF
 
 try:
     import Cookie  # py2
@@ -185,7 +186,7 @@ class HTTPConnection(object):
         # contexts from one request from leaking into the next.
         self._header_callback = stack_context.wrap(self._on_headers)
         self.stream.set_close_callback(self._on_connection_close)
-        self.stream.read_until(b"\r\n\r\n", self._header_callback)
+        self.stream.read_until(SEPARATOR_CRLFCRLF, self._header_callback)
 
     def _clear_request_state(self):
         """Clears the per-request state.
@@ -278,7 +279,7 @@ class HTTPConnection(object):
             # Use a try/except instead of checking stream.closed()
             # directly, because in some cases the stream doesn't discover
             # that it's closed until you try to read from it.
-            self.stream.read_until(b"\r\n\r\n", self._header_callback)
+            self.stream.read_until(SEPARATOR_CRLFCRLF, self._header_callback)
 
             # Turn Nagle's algorithm back on, leaving the stream in its
             # default state for the next request.

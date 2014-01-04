@@ -100,12 +100,19 @@ if type('') is not type(b'') and sys.platform != 'cli':
     bytes_type = bytes
     unicode_type = str
     basestring_type = str
+    EMPTY_STRING = b""
+    SEPARATOR_CRLF = b"\r\n"
+    SEPARATOR_CRLFCRLF = b"\r\n\r\n"
 else:
     def u(s):
         return s.decode('unicode_escape')
     bytes_type = str
     unicode_type = unicode
     basestring_type = basestring
+    EMPTY_STRING = ""
+    SEPARATOR_CRLF = "\r\n"
+    SEPARATOR_CRLFCRLF = "\r\n\r\n"
+
 
 
 if sys.version_info > (3,):
