@@ -684,6 +684,8 @@ class RequestHandler(object):
             kwargs["autoescape"] = settings["autoescape"]
         return template.Loader(template_path, **kwargs)
 
+    _EMPTY_STRING = bytes_type("")
+
     def flush(self, include_footers=False, callback=None):
         """Flushes the current output buffer to the network.
 
@@ -699,10 +701,7 @@ class RequestHandler(object):
             if callback is not None:
                 callback()
             return
-        if sys.platform != 'cli':
-            chunk = b"".join(self._write_buffer)
-        else:
-            chunk = "".join(self._write_buffer)
+        chunk = RequestHandler._EMPTY_STRING.join(self._write_buffer)
         self._write_buffer = []
         if not self._headers_written:
             self._headers_written = True
@@ -1168,6 +1167,9 @@ class RequestHandler(object):
         if self._auto_finish and not self._finished:
             self.finish()
 
+    _SEPARATOR_CRLF = bytes_type("\r\n")
+    _SEPARATOR_CRLFCRLF = bytes_type("\r\n\r\n")
+
     def _generate_headers(self):
         reason = self._reason
         lines = [utf8(self.request.version + " " +
@@ -1178,10 +1180,8 @@ class RequestHandler(object):
         if hasattr(self, "_new_cookie"):
             for cookie in self._new_cookie.values():
                 lines.append(utf8("Set-Cookie: " + cookie.OutputString(None)))
-        if sys.platform != 'cli':
-            return b"\r\n".join(lines) + b"\r\n\r\n"
-        else:
-            return "\r\n".join(lines) + "\r\n\r\n"
+        return RequestHandler._SEPARATOR_CRLF.join(lines) + \
+            RequestHandler._SEPARATOR_CRLFCRLF
 
     def _log(self):
         """Logs the current request.

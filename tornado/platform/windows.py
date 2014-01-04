@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function, with_statement
 import ctypes
 import ctypes.wintypes
+import sys
 
 # See: http://msdn.microsoft.com/en-us/library/ms724935(VS.85).aspx
 SetHandleInformation = ctypes.windll.kernel32.SetHandleInformation
@@ -15,6 +16,8 @@ HANDLE_FLAG_INHERIT = 0x00000001
 
 
 def set_close_exec(fd):
+    if sys.platform == 'cli':
+        fd = int(fd)
     success = SetHandleInformation(fd, HANDLE_FLAG_INHERIT, 0)
     if not success:
         raise ctypes.GetLastError()

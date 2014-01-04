@@ -206,7 +206,7 @@ def _reload():
             not os.environ.get("PYTHONPATH", "").startswith(path_prefix)):
         os.environ["PYTHONPATH"] = (path_prefix +
                                     os.environ.get("PYTHONPATH", ""))
-    if sys.platform == 'win32':
+    if sys.platform == 'win32' or sys.platform == 'cli':
         # os.execv is broken on Windows and can't properly parse command line
         # arguments and executable name if they contain whitespaces. subprocess
         # fixes that behavior.
