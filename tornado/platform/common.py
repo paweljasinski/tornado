@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, with_statement
 
 import errno
 import socket
-import sys
 
 from tornado.platform import interface
 from tornado.util import bytes_type
