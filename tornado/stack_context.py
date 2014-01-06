@@ -299,7 +299,7 @@ def wrap(fn):
             # Execute callback if no exception happened while restoring state
             if top is None:
                 try:
-                    # print("wrapped calling fn: %s"%fn)
+                    print("wrapped calling fn: %s"%fn)
                     # print("args %s"%",".join([str(arg) for arg in args]))
                     ret = fn(*args, **kwargs)
                 except:

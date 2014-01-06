@@ -321,7 +321,7 @@ class HTTPConnection(object):
                 if content_length > self.stream.max_buffer_size:
                     raise _BadRequestException("Content-Length too long")
                 if headers.get("Expect") == "100-continue":
-                    self.stream.write(b"HTTP/1.1 100 (Continue)\r\n\r\n")
+                    self.stream.write("HTTP/1.1 100 (Continue)\r\n\r\n")
                 self.stream.read_bytes(content_length, self._on_request_body)
                 return
 
@@ -333,12 +333,21 @@ class HTTPConnection(object):
             return
 
     def _on_request_body(self, data):
-        self._request.body = data
-        if self._request.method in ("POST", "PATCH", "PUT"):
-            httputil.parse_body_arguments(
-                self._request.headers.get("Content-Type", ""), data,
-                self._request.arguments, self._request.files)
-        self.request_callback(self._request)
+        try:
+            self._request.body = data
+            if self._request.method in ("POST", "PATCH", "PUT"):
+                httputil.parse_body_arguments(
+                    self._request.headers.get("Content-Type", ""), data,
+                    self._request.arguments, self._request.files)
+            self.request_callback(self._request)
+        except Exception as ex:
+            import traceback, sys
+            ei = sys.exc_info()
+            traceback.print_exc()
+            print(ei[2])
+            print("-"*80)
+            raise ei[0], ei[1], ei[2]
+
 
 
 class HTTPRequest(object):

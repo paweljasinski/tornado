@@ -195,9 +195,9 @@ class HTTPConnectionTest(AsyncHTTPTestCase):
                     None, self.stop,
                     1024 * 1024, resolver)
                 conn.set_request(
-                    b"\r\n".join(headers +
+                    "\r\n".join(headers +
                                  [utf8("Content-Length: %d\r\n" % len(body))]) +
-                    b"\r\n" + body)
+                    "\r\n" + body)
                 response = self.wait()
                 response.rethrow()
                 return response
@@ -206,20 +206,20 @@ class HTTPConnectionTest(AsyncHTTPTestCase):
         # Encodings here are tricky:  Headers are latin1, bodies can be
         # anything (we use utf8 by default).
         response = self.raw_fetch([
-            b"POST /multipart HTTP/1.0",
-            b"Content-Type: multipart/form-data; boundary=1234567890",
-            b"X-Header-encoding-test: \xe9",
+            "POST /multipart HTTP/1.0",
+            "Content-Type: multipart/form-data; boundary=1234567890",
+            "X-Header-encoding-test: \xe9",
         ],
-            b"\r\n".join([
-            b"Content-Disposition: form-data; name=argument",
-            b"",
+            bytes_type("\r\n").join([
+            "Content-Disposition: form-data; name=argument",
+            "",
             u("\u00e1").encode("utf-8"),
-            b"--1234567890",
+            "--1234567890",
             u('Content-Disposition: form-data; name="files"; filename="\u00f3"').encode("utf8"),
-            b"",
+            "",
             u("\u00fa").encode("utf-8"),
-            b"--1234567890--",
-            b"",
+            "--1234567890--",
+            "",
             ]))
         data = json_decode(response.body)
         self.assertEqual(u("\u00e9"), data["header"])
@@ -234,20 +234,20 @@ class HTTPConnectionTest(AsyncHTTPTestCase):
         stream = IOStream(socket.socket(), io_loop=self.io_loop)
         stream.connect(("localhost", self.get_http_port()), callback=self.stop)
         self.wait()
-        stream.write(b"\r\n".join([b"POST /hello HTTP/1.1",
-                                   b"Content-Length: 1024",
-                                   b"Expect: 100-continue",
-                                   b"Connection: close",
-                                   b"\r\n"]), callback=self.stop)
+        stream.write("\r\n".join(["POST /hello HTTP/1.1",
+                                   "Content-Length: 1024",
+                                   "Expect: 100-continue",
+                                   "Connection: close",
+                                   "\r\n"]), callback=self.stop)
         self.wait()
-        stream.read_until(b"\r\n\r\n", self.stop)
+        stream.read_until("\r\n\r\n", self.stop)
         data = self.wait()
-        self.assertTrue(data.startswith(b"HTTP/1.1 100 "), data)
-        stream.write(b"a" * 1024)
-        stream.read_until(b"\r\n", self.stop)
+        self.assertTrue(data.startswith("HTTP/1.1 100 "), data)
+        stream.write("a" * 1024)
+        stream.read_until("\r\n", self.stop)
         first_line = self.wait()
-        self.assertTrue(first_line.startswith(b"HTTP/1.1 200"), first_line)
-        stream.read_until(b"\r\n\r\n", self.stop)
+        self.assertTrue(first_line.startswith("HTTP/1.1 200"), first_line)
+        stream.read_until("\r\n\r\n", self.stop)
         header_data = self.wait()
         headers = HTTPHeaders.parse(native_str(header_data.decode('latin1')))
         stream.read_bytes(int(headers["Content-Length"]), self.stop)
@@ -368,7 +368,7 @@ class HTTPServerRawTest(AsyncHTTPTestCase):
 
     def test_malformed_first_line(self):
         with ExpectLog(gen_log, '.*Malformed HTTP request line'):
-            self.stream.write(b'asdf\r\n\r\n')
+            self.stream.write('asdf\r\n\r\n')
             # TODO: need an async version of ExpectLog so we don't need
             # hard-coded timeouts here.
             self.io_loop.add_timeout(datetime.timedelta(seconds=0.01),
@@ -377,7 +377,7 @@ class HTTPServerRawTest(AsyncHTTPTestCase):
 
     def test_malformed_headers(self):
         with ExpectLog(gen_log, '.*Malformed HTTP headers'):
-            self.stream.write(b'GET / HTTP/1.0\r\nasdf\r\n\r\n')
+            self.stream.write('GET / HTTP/1.0\r\nasdf\r\n\r\n')
             self.io_loop.add_timeout(datetime.timedelta(seconds=0.01),
                                      self.stop)
             self.wait()
@@ -577,10 +577,10 @@ class KeepAliveTest(AsyncHTTPTestCase):
         self.wait()
 
     def read_headers(self):
-        self.stream.read_until(b'\r\n', self.stop)
+        self.stream.read_until('\r\n', self.stop)
         first_line = self.wait()
-        self.assertTrue(first_line.startswith(self.http_version + b' 200'), first_line)
-        self.stream.read_until(b'\r\n\r\n', self.stop)
+        self.assertTrue(first_line.startswith(self.http_version + ' 200'), first_line)
+        self.stream.read_until('\r\n\r\n', self.stop)
         header_bytes = self.wait()
         headers = HTTPHeaders.parse(header_bytes.decode('latin1'))
         return headers
@@ -597,15 +597,15 @@ class KeepAliveTest(AsyncHTTPTestCase):
 
     def test_two_requests(self):
         self.connect()
-        self.stream.write(b'GET / HTTP/1.1\r\n\r\n')
+        self.stream.write('GET / HTTP/1.1\r\n\r\n')
         self.read_response()
-        self.stream.write(b'GET / HTTP/1.1\r\n\r\n')
+        self.stream.write('GET / HTTP/1.1\r\n\r\n')
         self.read_response()
         self.close()
 
     def test_request_close(self):
         self.connect()
-        self.stream.write(b'GET / HTTP/1.1\r\nConnection: close\r\n\r\n')
+        self.stream.write('GET / HTTP/1.1\r\nConnection: close\r\n\r\n')
         self.read_response()
         self.stream.read_until_close(callback=self.stop)
         data = self.wait()
@@ -614,9 +614,9 @@ class KeepAliveTest(AsyncHTTPTestCase):
 
     # keepalive is supported for http 1.0 too, but it's opt-in
     def test_http10(self):
-        self.http_version = b'HTTP/1.0'
+        self.http_version = 'HTTP/1.0'
         self.connect()
-        self.stream.write(b'GET / HTTP/1.0\r\n\r\n')
+        self.stream.write('GET / HTTP/1.0\r\n\r\n')
         self.read_response()
         self.stream.read_until_close(callback=self.stop)
         data = self.wait()
@@ -624,31 +624,31 @@ class KeepAliveTest(AsyncHTTPTestCase):
         self.close()
 
     def test_http10_keepalive(self):
-        self.http_version = b'HTTP/1.0'
+        self.http_version = 'HTTP/1.0'
         self.connect()
-        self.stream.write(b'GET / HTTP/1.0\r\nConnection: keep-alive\r\n\r\n')
+        self.stream.write('GET / HTTP/1.0\r\nConnection: keep-alive\r\n\r\n')
         self.read_response()
-        self.stream.write(b'GET / HTTP/1.0\r\nConnection: keep-alive\r\n\r\n')
+        self.stream.write('GET / HTTP/1.0\r\nConnection: keep-alive\r\n\r\n')
         self.read_response()
         self.close()
 
     def test_pipelined_requests(self):
         self.connect()
-        self.stream.write(b'GET / HTTP/1.1\r\n\r\nGET / HTTP/1.1\r\n\r\n')
+        self.stream.write('GET / HTTP/1.1\r\n\r\nGET / HTTP/1.1\r\n\r\n')
         self.read_response()
         self.read_response()
         self.close()
 
     def test_pipelined_cancel(self):
         self.connect()
-        self.stream.write(b'GET / HTTP/1.1\r\n\r\nGET / HTTP/1.1\r\n\r\n')
+        self.stream.write('GET / HTTP/1.1\r\n\r\nGET / HTTP/1.1\r\n\r\n')
         # only read once
         self.read_response()
         self.close()
 
     def test_cancel_during_download(self):
         self.connect()
-        self.stream.write(b'GET /large HTTP/1.1\r\n\r\n')
+        self.stream.write('GET /large HTTP/1.1\r\n\r\n')
         self.read_headers()
         self.stream.read_bytes(1024, self.stop)
         self.wait()
@@ -656,6 +656,6 @@ class KeepAliveTest(AsyncHTTPTestCase):
 
     def test_finish_while_closed(self):
         self.connect()
-        self.stream.write(b'GET /finish_on_close HTTP/1.1\r\n\r\n')
+        self.stream.write('GET /finish_on_close HTTP/1.1\r\n\r\n')
         self.read_headers()
         self.close()

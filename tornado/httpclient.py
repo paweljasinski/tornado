@@ -382,6 +382,9 @@ class HTTPResponse(object):
     def __init__(self, request, code, headers=None, buffer=None,
                  effective_url=None, error=None, request_time=None,
                  time_info=None, reason=None):
+        print("error: %s"%error)
+        import traceback,sys
+        traceback.print_stack(file=sys.stderr)
         if isinstance(request, _RequestProxy):
             self.request = request.request
         else:

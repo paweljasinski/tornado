@@ -94,7 +94,11 @@ class _DummyFuture(object):
         self._done = True
         for cb in self._callbacks:
             # TODO: error handling
-            cb(self)
+            try:
+                cb(self)
+            except Exception as ex:
+                import traceback,sys
+                traceback.print_exc()
         self._callbacks = None
 
 if futures is None:

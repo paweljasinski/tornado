@@ -262,8 +262,8 @@ class _HTTPConnection(object):
             if self.request.auth_mode not in (None, "basic"):
                 raise ValueError("unsupported auth_mode %s",
                                  self.request.auth_mode)
-            auth = utf8(username) + b":" + utf8(password)
-            self.request.headers["Authorization"] = (b"Basic " +
+            auth = utf8(username) + ":" + utf8(password)
+            self.request.headers["Authorization"] = ("Basic " +
                                                      base64.b64encode(auth))
         if self.request.user_agent:
             self.request.headers["User-Agent"] = self.request.user_agent
@@ -285,16 +285,16 @@ class _HTTPConnection(object):
         request_lines = [utf8("%s %s HTTP/1.1" % (self.request.method,
                                                   req_path))]
         for k, v in self.request.headers.get_all():
-            line = utf8(k) + b": " + utf8(v)
+            line = utf8(k) + ": " + utf8(v)
             if b'\n' in line:
                 raise ValueError('Newline in header: ' + repr(line))
             request_lines.append(line)
-        request_str = b"\r\n".join(request_lines) + b"\r\n\r\n"
+        request_str = "\r\n".join(request_lines) + "\r\n\r\n"
         if self.request.body is not None:
             request_str += self.request.body
         self.stream.set_nodelay(True)
         self.stream.write(request_str)
-        self.stream.read_until_regex(b"\r?\n\r?\n", self._on_headers)
+        self.stream.read_until_regex("\r?\n\r?\n", self._on_headers)
 
     def _release(self):
         if self.release_callback is not None:
@@ -310,6 +310,8 @@ class _HTTPConnection(object):
             self.io_loop.add_callback(final_callback, response)
 
     def _handle_exception(self, typ, value, tb):
+        import traceback
+        traceback.print_tb(tb)
         if self.final_callback:
             self._remove_timeout()
             self._run_callback(HTTPResponse(self.request, 599, error=value,
@@ -334,9 +336,17 @@ class _HTTPConnection(object):
             raise HTTPError(599, message)
 
     def _handle_1xx(self, code):
-        self.stream.read_until_regex(b"\r?\n\r?\n", self._on_headers)
+        self.stream.read_until_regex("\r?\n\r?\n", self._on_headers)
 
     def _on_headers(self, data):
+        try:
+            self._on_headers_int(data)
+        except Exception as ex:
+            import sys,traceback
+            traceback.print_exc()
+            raise ex
+
+    def _on_headers_int(self, data):
         data = native_str(data.decode("latin1"))
         first_line, _, header_data = data.partition("\n")
         match = re.match("HTTP/1.[01] ([0-9]+) ([^\r]*)", first_line)
@@ -374,7 +384,7 @@ class _HTTPConnection(object):
         if self.request.method == "HEAD" or self.code == 304:
             # HEAD requests and 304 responses never have content, even
             # though they may have content-length headers
-            self._on_body(b"")
+            self._on_body("")
             return
         if 100 <= self.code < 200 or self.code == 204:
             # These response codes never have bodies
@@ -383,7 +393,7 @@ class _HTTPConnection(object):
                     content_length not in (None, 0)):
                 raise ValueError("Response with code %d should not have body" %
                                  self.code)
-            self._on_body(b"")
+            self._on_body("")
             return
 
         if (self.request.use_gzip and
@@ -391,7 +401,7 @@ class _HTTPConnection(object):
             self._decompressor = GzipDecompressor()
         if self.headers.get("Transfer-Encoding") == "chunked":
             self.chunks = []
-            self.stream.read_until(b"\r\n", self._on_chunk_length)
+            self.stream.read_until("\r\n", self._on_chunk_length)
         elif content_length is not None:
             self.stream.read_bytes(content_length, self._on_body)
         else:
@@ -475,13 +485,13 @@ class _HTTPConnection(object):
                 # all the data has been decompressed, so we don't need to
                 # decompress again in _on_body
                 self._decompressor = None
-            self._on_body(b''.join(self.chunks))
+            self._on_body(''.join(self.chunks))
         else:
             self.stream.read_bytes(length + 2,  # chunk ends with \r\n
                                    self._on_chunk_data)
 
     def _on_chunk_data(self, data):
-        assert data[-2:] == b"\r\n"
+        assert data[-2:] == "\r\n"
         chunk = data[:-2]
         if self._decompressor:
             chunk = self._decompressor.decompress(chunk)
@@ -489,7 +499,7 @@ class _HTTPConnection(object):
             self.request.streaming_callback(chunk)
         else:
             self.chunks.append(chunk)
-        self.stream.read_until(b"\r\n", self._on_chunk_length)
+        self.stream.read_until("\r\n", self._on_chunk_length)
 
 
 if __name__ == "__main__":

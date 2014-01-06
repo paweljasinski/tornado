@@ -126,17 +126,23 @@ def exec_in(code, glob, loc=None):
     exec(code, glob, loc)
 """)
 else:
-    exec("""
-def raise_exc_info(exc_info):
-    raise exc_info[0], exc_info[1], exc_info[2]
+    #exec("""
+    def raise_exc_info(exc_info):
+        print("type of exc_info[2]: %s" % type(exc_info[2]))
+        print("exc_info[2]: %s" % exc_info[2])
+        print("type of exc_info[0]: %s" % type(exc_info[0]))
+        import traceback
+        print(traceback.print_tb(exc_info[2]))
+        print("-"*80)
+        raise exc_info[0], exc_info[1], exc_info[2]
 
-def exec_in(code, glob, loc=None):
-    if isinstance(code, basestring):
-        # exec(string) inherits the caller's future imports; compile
-        # the string first to prevent that.
-        code = compile(code, '<string>', 'exec', dont_inherit=True)
-    exec code in glob, loc
-""")
+    def exec_in(code, glob, loc=None):
+        if isinstance(code, basestring):
+            # exec(string) inherits the caller's future imports; compile
+            # the string first to prevent that.
+            code = compile(code, '<string>', 'exec', dont_inherit=True)
+        exec code in glob, loc
+#""")
 
 
 class Configurable(object):
