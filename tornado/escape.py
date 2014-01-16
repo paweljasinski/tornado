@@ -190,7 +190,10 @@ def utf8(value):
         return value
     assert isinstance(value, unicode_type), \
         "Expected bytes, unicode, or None; got %r" % type(value)
-    return value.encode("utf-8")
+    if sys.platform != 'cli':
+        return value
+    else:
+        return bytes(value.encode("utf-8"), "latin-1")
 
 _TO_UNICODE_TYPES = (unicode_type, type(None))
 

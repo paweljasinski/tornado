@@ -72,11 +72,9 @@ class Waker(interface.Waker):
     def write_fileno(self):
         return self.writer.fileno()
 
-    _X = bytes_type("x")
-
     def wake(self):
         try:
-            self.writer.send(Waker._X)
+            self.writer.send(b"x")
         except (IOError, socket.error):
             pass
 

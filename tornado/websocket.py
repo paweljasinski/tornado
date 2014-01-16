@@ -27,6 +27,7 @@ import functools
 import hashlib
 import os
 import struct
+import sys
 import time
 import tornado.escape
 import tornado.web
@@ -579,7 +580,10 @@ class WebSocketProtocol13(WebSocketProtocol):
             mask = os.urandom(4)
             data = mask + self._apply_mask(mask, data)
         frame += data
-        self.stream.write(frame)
+        if sys.platform != 'cli':
+            self.stream.write(frame)
+        else:
+            self.stream.write(bytes(frame, 'iso-8859-1'))
 
     def write_message(self, message, binary=False):
         """Sends the given message to the client of this Web Socket."""

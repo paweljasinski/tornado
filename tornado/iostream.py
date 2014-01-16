@@ -457,7 +457,10 @@ class BaseIOStream(object):
             raise
         if chunk is None:
             return 0
-        self._read_buffer.append(chunk)
+        if sys.platform != 'cli':
+            self._read_buffer.append(chunk)
+        else:
+            self._read_buffer.append(bytes(chunk, 'latin-1'))
         self._read_buffer_size += len(chunk)
         if self._read_buffer_size >= self.max_buffer_size:
             gen_log.error("Reached maximum read buffer size")
@@ -692,7 +695,10 @@ class IOStream(BaseIOStream):
         return chunk
 
     def write_to_fd(self, data):
-        return self.socket.send(data)
+        if sys.platform != 'cli':
+            self.socket.send(data)
+        else:
+            return self.socket.send(buffer(data))
 
     def connect(self, address, callback=None, server_hostname=None):
         """Connects the socket to a remote address without blocking.
