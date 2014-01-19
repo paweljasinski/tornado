@@ -88,6 +88,7 @@ def import_object(name):
     except AttributeError:
         raise ImportError("No module named %s" % parts[-1])
 
+bytes_api_cast = lambda s: s
 
 # Fake unicode literal support:  Python 3.2 doesn't have the u'' marker for
 # literal strings, and alternative solutions like "from __future__ import
@@ -100,13 +101,16 @@ if type('') is not type(b''):
     bytes_type = bytes
     unicode_type = str
     basestring_type = str
+    if sys.platform == 'cli' and sys.version_info.major < 3:
+        # ironpython 2.7, str/byte/unicode match 3.x but api is 2.7
+        # this can be used to adjust arguments
+        bytes_api_cast = lambda s: s.decode('iso-8859-1')
 else:
     def u(s):
         return s.decode('unicode_escape')
     bytes_type = str
     unicode_type = unicode
     basestring_type = basestring
-
 
 if sys.version_info > (3,):
     exec("""

@@ -5,7 +5,7 @@ import errno
 import socket
 
 from tornado.platform import interface
-from tornado.util import bytes_type
+from tornado.util import bytes_api_cast
 
 
 class Waker(interface.Waker):
@@ -74,7 +74,7 @@ class Waker(interface.Waker):
 
     def wake(self):
         try:
-            self.writer.send(b"x")
+            self.writer.send(bytes_api_cast(b"x"))
         except (IOError, socket.error):
             pass
 
