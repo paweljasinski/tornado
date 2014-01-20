@@ -2000,7 +2000,7 @@ class StaticFileHandler(RequestHandler):
                 if chunk:
                     if remaining is not None:
                         remaining -= len(chunk)
-                    yield chunk
+                    yield bytes(chunk, 'iso-8859-1')
                 else:
                     if remaining is not None:
                         assert remaining == 0
